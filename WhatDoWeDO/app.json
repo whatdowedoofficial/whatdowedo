@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "WhatDoWeDO",
+    "slug": "whatdowedo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF5A5F"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.whatdowedo.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "WhatDoWeDO ha bisogno della tua posizione per mostrarti gli eventi vicino a te."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF5A5F"
+      },
+      "package": "com.whatdowedo.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "WhatDoWeDO ha bisogno della tua posizione per mostrarti gli eventi vicino a te."
+        }
+      ],
+      "expo-asset",
+      "expo-font"
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+[
+  {
+    "name": "MilanoToday",
+    "type": "web",
+    "enabled": true,
+    "urls": [
+      "https://www.milanotoday.it/eventi/"
+    ]
+  },
+  {
+    "name": "RomaToday",
+    "type": "web",
+    "enabled": true,
+    "urls": [
+      "https://www.romatoday.it/eventi/"
+    ]
+  },
+  {
+    "name": "TorinoToday",
+    "type": "web",
+    "enabled": true,
+    "urls": [
+      "https://www.torinotoday.it/eventi/"
+    ]
+  },
+  {
+    "name": "BolognaToday",
+    "type": "web",
+    "enabled": true,
+    "urls": [
+      "https://www.bolognatoday.it/eventi/"
+    ]
+  },
+  {
+    "name": "FirenzeToday",
+    "type": "web",
+    "enabled": true,
+    "urls": [
+      "https://www.firenzetoday.it/eventi/"
+    ]
+  },
+  {
+    "name": "NapoliToday",
+    "type": "web",
+    "enabled": true,
+    "urls": [
+      "https://www.napolitoday.it/eventi/"
+    ]
+  },
+  {
+    "name": "Dice.fm",
+    "type": "web",
+    "enabled": true,
+    "urls": [
+      "https://dice.fm/browse/milan",
+      "https://dice.fm/browse/rome",
+      "https://dice.fm/browse/turin",
+      "https://dice.fm/browse/bologna",
+      "https://dice.fm/browse/florence",
+      "https://dice.fm/browse/naples"
+    ]
+  },
+  {
+    "name": "Eventbrite",
+    "type": "web",
+    "enabled": true,
+    "urls": [
+      "https://www.eventbrite.it/d/italy--milano/events/",
+      "https://www.eventbrite.it/d/italy--roma/events/",
+      "https://www.eventbrite.it/d/italy--torino/events/",
+      "https://www.eventbrite.it/d/italy--bologna/events/",
+      "https://www.eventbrite.it/d/italy--firenze/events/",
+      "https://www.eventbrite.it/d/italy--napoli/events/"
+    ]
+  },
+  {
+    "name": "SerpAPI",
+    "type": "serpapi",
+    "enabled": true
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "name": "whatdowedo-scraper",
+  "version": "1.0.0",
+  "description": "AI-powered event scraper for WhatDoWeDO",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "scrape": "tsx src/index.ts",
+    "scrape:dry": "tsx src/index.ts --dry-run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "axios": "^1.7.0",
+    "cheerio": "^1.0.0",
+    "dotenv": "^17.4.2",
+    "serpapi": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
