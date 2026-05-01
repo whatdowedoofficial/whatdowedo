@@ -52,12 +52,9 @@
     "type": "web",
     "enabled": true,
     "urls": [
-      "https://dice.fm/browse/milan",
-      "https://dice.fm/browse/rome",
-      "https://dice.fm/browse/turin",
-      "https://dice.fm/browse/bologna",
-      "https://dice.fm/browse/florence",
-      "https://dice.fm/browse/naples"
+      "https://dice.fm/browse/milano-5d68e89f7f285e094f60b00e",
+      "https://dice.fm/browse/roma-5d68eb080c4e18d46783919d",
+      "https://dice.fm/browse/bologna-5d68eaf8d2cb4e6119b07d9c"
     ]
   },
   {

@@ -41,8 +41,8 @@ export async function scrapeWebPage(
 
     console.log(`  [WEB] Extracted ${textContent.length} chars, sending to AI...`);
 
-    // Limit text length for AI (Groq max ~6000 chars)
-    const safeText = textContent.slice(0, 6000);
+    // Limit text length for AI (Groq free tier TPM limit)
+    const safeText = textContent.slice(0, 3500);
     const events = await extractEventsFromText(safeText, url, sourceName);
 
     console.log(`  [WEB] AI extracted ${events.length} events from ${url}`);
