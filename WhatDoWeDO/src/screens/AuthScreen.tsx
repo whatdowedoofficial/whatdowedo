@@ -10,7 +10,12 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
+import { supabase } from '../services/supabaseClient';
 import { COLORS } from '../constants';
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface AuthScreenProps {
   onSignIn: (email: string, password: string) => Promise<any>;
@@ -22,6 +27,7 @@ export function AuthScreen({ onSignIn, onSignUp }: AuthScreenProps) {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
@@ -43,6 +49,43 @@ export function AuthScreen({ onSignIn, onSignUp }: AuthScreenProps) {
       Alert.alert('Errore', error.message);
     } else if (isSignUp) {
       Alert.alert('Registrazione completata', 'Controlla la tua email per confermare l\'account');
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      const redirectUrl = makeRedirectUri();
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) {
+        Alert.alert('Errore', error.message);
+        return;
+      }
+
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+        if (result.type === 'success' && result.url) {
+          const url = new URL(result.url);
+          // Extract tokens from URL fragment
+          const params = new URLSearchParams(url.hash.substring(1));
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+          if (accessToken && refreshToken) {
+            await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          }
+        }
+      }
+    } catch (e: any) {
+      Alert.alert('Errore', e.message || 'Errore durante il login con Google');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -94,6 +137,26 @@ export function AuthScreen({ onSignIn, onSignUp }: AuthScreenProps) {
             )}
           </TouchableOpacity>
         </View>
+
+        {/* Divider */}
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>oppure</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* Google button */}
+        <TouchableOpacity
+          style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
+          onPress={handleGoogleSignIn}
+          disabled={googleLoading}
+        >
+          {googleLoading ? (
+            <ActivityIndicator color={COLORS.text} />
+          ) : (
+            <Text style={styles.googleButtonText}>Continua con Google</Text>
+          )}
+        </TouchableOpacity>
 
         {/* Toggle sign in / sign up */}
         <TouchableOpacity
@@ -174,5 +237,33 @@ const styles = StyleSheet.create({
   toggleText: {
     color: COLORS.primary,
     fontSize: 15,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: COLORS.border,
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    color: COLORS.textSecondary,
+    fontSize: 14,
+  },
+  googleButton: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  googleButtonText: {
+    color: COLORS.text,
+    fontSize: 17,
+    fontWeight: '600',
   },
 });
