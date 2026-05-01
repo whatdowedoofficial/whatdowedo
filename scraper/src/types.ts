@@ -29,9 +29,10 @@ export type EventCategory =
 
 export interface SourceConfig {
   name: string;
-  type: 'web' | 'eventbrite' | 'serpapi';
+  type: 'web' | 'eventbrite' | 'serpapi' | 'telegram';
   urls?: string[];
   cities?: string[];
+  channels?: string[];
   enabled: boolean;
 }
 

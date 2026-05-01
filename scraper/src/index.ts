@@ -3,6 +3,7 @@ import sources from './config/sources.json';
 import { scrapeWebSource } from './sources/webscraper.js';
 import { scrapeEventbrite } from './sources/eventbrite.js';
 import { scrapeSerpApi } from './sources/serpapi.js';
+import { scrapeTelegram } from './sources/telegram.js';
 import { geocodeAddress } from './utils/geocode.js';
 import { assignExternalIds } from './utils/dedup.js';
 import { upsertEvents, cleanupPastEvents } from './db/supabase.js';
@@ -67,6 +68,12 @@ async function main() {
 
       case 'serpapi':
         events = await scrapeSerpApi();
+        break;
+
+      case 'telegram':
+        if (source.channels && source.channels.length > 0) {
+          events = await scrapeTelegram(source.channels);
+        }
         break;
 
       default:

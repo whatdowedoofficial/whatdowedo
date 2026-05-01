@@ -74,5 +74,13 @@
     "name": "SerpAPI",
     "type": "serpapi",
     "enabled": true
+  },
+  {
+    "name": "Telegram",
+    "type": "telegram",
+    "enabled": true,
+    "channels": [
+      "cosafareavicenzaedintorni"
+    ]
   }
 ]
