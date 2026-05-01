@@ -1,66 +1,124 @@
 import { EXTRACTION_PROMPT } from './prompts.js';
 import type { ScrapedEvent, EventCategory } from '../types.js';
 
-const apiKey = process.env.GROQ_API_KEY;
-if (!apiKey) {
+const GROQ_KEY = process.env.GROQ_API_KEY;
+if (!GROQ_KEY) {
   throw new Error('Missing GROQ_API_KEY env var');
 }
 
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const models = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+interface ModelConfig {
+  name: string;
+  provider: 'groq';
+  url: string;
+  apiKey: string;
+  maxTokens: number;
+}
+
+// Models ordered by priority. Round-robin within same priority tier.
+const MODEL_POOL: ModelConfig[] = [
+  {
+    name: 'llama-3.3-70b-versatile',
+    provider: 'groq',
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    apiKey: GROQ_KEY,
+    maxTokens: 4096,
+  },
+  {
+    name: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    provider: 'groq',
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    apiKey: GROQ_KEY,
+    maxTokens: 4096,
+  },
+  {
+    name: 'llama-3.1-8b-instant',
+    provider: 'groq',
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    apiKey: GROQ_KEY,
+    maxTokens: 4096,
+  },
+];
+
+let callIndex = 0;
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-async function callWithRetry(prompt: string): Promise<string> {
-  for (const modelName of models) {
-    for (let attempt = 0; attempt < 3; attempt++) {
+function getNextModel(): ModelConfig {
+  const model = MODEL_POOL[callIndex % MODEL_POOL.length];
+  callIndex++;
+  return model;
+}
+
+async function callModel(model: ModelConfig, prompt: string): Promise<string> {
+  const res = await fetch(model.url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${model.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: model.name,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: model.maxTokens,
+    }),
+  });
+
+  if (res.status === 429) {
+    throw new Error(`RATE_LIMITED:${model.name}`);
+  }
+
+  if (res.status === 503) {
+    throw new Error(`UNAVAILABLE:${model.name}`);
+  }
+
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`API error ${res.status} on ${model.name}: ${errBody}`);
+  }
+
+  const data = await res.json() as any;
+  return data.choices[0].message.content;
+}
+
+async function callWithLoadBalancing(prompt: string): Promise<string> {
+  const tried = new Set<string>();
+
+  // Try up to all models in the pool
+  for (let i = 0; i < MODEL_POOL.length; i++) {
+    const model = getNextModel();
+
+    // Skip if we already tried this model
+    if (tried.has(model.name)) continue;
+    tried.add(model.name);
+
+    for (let attempt = 0; attempt < 2; attempt++) {
       try {
         if (attempt > 0) {
-          const wait = 10000 * attempt;
-          console.log(`  [AI] Waiting ${wait / 1000}s before retry...`);
-          await delay(wait);
+          console.log(`  [AI] Retry ${model.name} after 10s...`);
+          await delay(10000);
         }
 
-        const res = await fetch(GROQ_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: modelName,
-            messages: [{ role: 'user', content: prompt }],
-            temperature: 0.1,
-            max_tokens: 4096,
-          }),
-        });
-
-        if (res.status === 429) {
-          console.warn(`  [AI] Rate limited on ${modelName}, retrying...`);
-          continue;
-        }
-
-        if (!res.ok) {
-          const errBody = await res.text();
-          if (res.status === 503) {
-            console.warn(`  [AI] Model ${modelName} unavailable (503), trying next model...`);
-            break;
-          }
-          throw new Error(`Groq API error ${res.status}: ${errBody}`);
-        }
-
-        const data = await res.json() as any;
-        return data.choices[0].message.content;
+        const result = await callModel(model, prompt);
+        return result;
       } catch (error: any) {
-        if (error.message?.includes('503') || error.message?.includes('overloaded')) {
-          console.warn(`  [AI] Model ${modelName} unavailable, trying next...`);
-          break;
+        if (error.message?.startsWith('RATE_LIMITED')) {
+          console.warn(`  [AI] Rate limited on ${model.name}, trying next model...`);
+          break; // Try next model
         }
-        throw error;
+        if (error.message?.startsWith('UNAVAILABLE')) {
+          console.warn(`  [AI] ${model.name} unavailable, trying next model...`);
+          break; // Try next model
+        }
+        if (attempt === 1) {
+          console.warn(`  [AI] ${model.name} failed after retry: ${error.message}`);
+          break; // Try next model
+        }
       }
     }
   }
-  throw new Error('All Groq models unavailable');
+
+  throw new Error('All models exhausted');
 }
 
 /**
@@ -76,7 +134,7 @@ export async function extractEventsFromText(
     .replace('{page_content}', pageContent.slice(0, 30000)); // Limit to ~30k chars
 
   try {
-    const text = await callWithRetry(prompt);
+    const text = await callWithLoadBalancing(prompt);
 
     // Extract JSON from response (handle markdown code blocks)
     const jsonMatch = text.match(/\[[\s\S]*\]/);
