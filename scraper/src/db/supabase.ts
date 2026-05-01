@@ -54,10 +54,10 @@ export async function upsertEvents(events: ScrapedEvent[]): Promise<{ inserted: 
 }
 
 /**
- * Remove events that have already passed (start_time > 24h ago).
+ * Remove events that have already passed (start_time older than N days).
  */
-export async function cleanupPastEvents(): Promise<number> {
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+export async function cleanupPastEvents(daysOld: number = 3): Promise<number> {
+  const cutoff = new Date(Date.now() - daysOld * 24 * 60 * 60 * 1000).toISOString();
 
   const { data, error } = await supabase
     .from('events')

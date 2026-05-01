@@ -105,10 +105,10 @@ async function main() {
     const result = await upsertEvents(geocoded);
     console.log(`[DB] Inserted/updated: ${result.inserted}, Errors: ${result.errors}`);
 
-    // Cleanup old events
-    const cleaned = await cleanupPastEvents();
+    // Cleanup old events (older than 3 days)
+    const cleaned = await cleanupPastEvents(3);
     if (cleaned > 0) {
-      console.log(`[DB] Cleaned up ${cleaned} past events`);
+      console.log(`[DB] Cleaned up ${cleaned} past events (older than 3 days)`);
     }
   }
 
