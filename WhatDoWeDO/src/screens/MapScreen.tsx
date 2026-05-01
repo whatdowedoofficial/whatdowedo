@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import MapView, { Marker, UrlTile } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocation } from '../hooks/useLocation';
@@ -10,11 +10,7 @@ import { EventCard } from '../components/EventCard';
 import { COLORS, CATEGORY_COLORS, DEFAULT_RADIUS_KM } from '../constants';
 import type { EventItem } from '../types/event';
 
-interface MapScreenProps {
-  onSignOut: () => void;
-}
-
-export function MapScreen({ onSignOut }: MapScreenProps) {
+export function MapScreen() {
   const { location, loading: locationLoading, requestGPS, searchLocation } = useLocation();
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS_KM);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
@@ -63,13 +59,8 @@ export function MapScreen({ onSignOut }: MapScreenProps) {
         loading={locationLoading}
       />
 
-      {/* Radius selector + logout */}
-      <View style={styles.topRow}>
-        <RadiusSelector value={radiusKm} onChange={handleRadiusChange} />
-        <TouchableOpacity style={styles.logoutBtn} onPress={onSignOut}>
-          <Text style={styles.logoutText}>Esci</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Radius selector */}
+      <RadiusSelector value={radiusKm} onChange={handleRadiusChange} />
 
       {/* Map */}
       <View style={styles.mapContainer}>
@@ -122,21 +113,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.surface,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  logoutBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 12,
-  },
-  logoutText: {
-    color: COLORS.primary,
-    fontSize: 14,
-    fontWeight: '600',
   },
   mapContainer: {
     flex: 1,

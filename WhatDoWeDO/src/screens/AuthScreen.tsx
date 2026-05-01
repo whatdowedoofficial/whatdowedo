@@ -11,7 +11,6 @@ import {
   Alert,
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-import { makeRedirectUri } from 'expo-auth-session';
 import { supabase } from '../services/supabaseClient';
 import { COLORS } from '../constants';
 
@@ -55,12 +54,16 @@ export function AuthScreen({ onSignIn, onSignUp }: AuthScreenProps) {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const redirectUrl = makeRedirectUri();
+      const redirectTo = 'whatdowedo://auth/callback';
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo,
           skipBrowserRedirect: true,
+          queryParams: {
+            prompt: 'consent',
+          },
         },
       });
 
@@ -70,16 +73,28 @@ export function AuthScreen({ onSignIn, onSignUp }: AuthScreenProps) {
       }
 
       if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+        // Force implicit flow by replacing the URL to request tokens directly
+        const oauthUrl = data.url.replace('response_type=code', 'response_type=token');
+        const result = await WebBrowser.openAuthSessionAsync(
+          oauthUrl,
+          redirectTo
+        );
+
         if (result.type === 'success' && result.url) {
-          const url = new URL(result.url);
-          // Extract tokens from URL fragment
-          const params = new URLSearchParams(url.hash.substring(1));
-          const accessToken = params.get('access_token');
-          const refreshToken = params.get('refresh_token');
-          if (accessToken && refreshToken) {
-            await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          const url = result.url;
+          const hashPart = url.includes('#') ? url.split('#')[1] : '';
+
+          if (hashPart) {
+            const params = new URLSearchParams(hashPart);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+            if (accessToken && refreshToken) {
+              await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+              return;
+            }
           }
+
+          Alert.alert('Errore', 'Token non trovati nella risposta');
         }
       }
     } catch (e: any) {
