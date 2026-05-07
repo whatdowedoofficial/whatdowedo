@@ -28,7 +28,9 @@
       "package": "com.whatdowedo.app",
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
@@ -41,6 +43,11 @@
       "expo-asset",
       "expo-font",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "616df0e9-5779-4740-983f-ec3eec9e8623"
+      }
+    }
   }
 }
