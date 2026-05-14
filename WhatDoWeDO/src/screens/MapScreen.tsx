@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import MapView, { Marker, UrlTile } from 'react-native-maps';
+import MapView, { Marker, Circle, UrlTile } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocation } from '../hooks/useLocation';
 import { useEvents } from '../hooks/useEvents';
@@ -75,6 +75,32 @@ export function MapScreen() {
           }}
           onPress={() => setSelectedEvent(null)}
         >
+          {/* Center marker (blue dot) */}
+          <Marker
+            coordinate={{ latitude: location.latitude, longitude: location.longitude }}
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
+            <View
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 6,
+                backgroundColor: '#4285F4',
+                borderWidth: 2,
+                borderColor: '#fff',
+              }}
+            />
+          </Marker>
+
+          {/* Search radius circle */}
+          <Circle
+            center={{ latitude: location.latitude, longitude: location.longitude }}
+            radius={radiusKm * 1000}
+            strokeColor="rgba(66, 133, 244, 0.3)"
+            fillColor="rgba(66, 133, 244, 0.08)"
+            strokeWidth={1}
+          />
+
           {/* Event markers */}
           {events.map((event) => (
             <Marker
