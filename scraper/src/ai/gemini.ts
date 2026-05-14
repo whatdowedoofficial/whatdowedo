@@ -2,19 +2,22 @@ import { EXTRACTION_PROMPT } from './prompts.js';
 import type { ScrapedEvent, EventCategory } from '../types.js';
 
 const GROQ_KEY = process.env.GROQ_API_KEY;
+const GEMINI_KEY = process.env.GEMINI_API_KEY; // Optional fallback
+
 if (!GROQ_KEY) {
   throw new Error('Missing GROQ_API_KEY env var');
 }
 
 interface ModelConfig {
   name: string;
-  provider: 'groq';
+  provider: 'groq' | 'gemini';
   url: string;
   apiKey: string;
   maxTokens: number;
 }
 
 // Models ordered by priority. Round-robin within same priority tier.
+// Groq models are primary, Gemini is fallback (if API key provided)
 const MODEL_POOL: ModelConfig[] = [
   {
     name: 'llama-3.3-70b-versatile',
@@ -37,6 +40,14 @@ const MODEL_POOL: ModelConfig[] = [
     apiKey: GROQ_KEY,
     maxTokens: 4096,
   },
+  // Add Gemini as fallback if key is available
+  ...(GEMINI_KEY ? [{
+    name: 'gemini-2.0-flash',
+    provider: 'gemini' as const,
+    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    apiKey: GEMINI_KEY,
+    maxTokens: 4096,
+  }] : []),
 ];
 
 let callIndex = 0;
@@ -50,35 +61,70 @@ function getNextModel(): ModelConfig {
 }
 
 async function callModel(model: ModelConfig, prompt: string): Promise<string> {
-  const res = await fetch(model.url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${model.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: model.name,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.1,
-      max_tokens: model.maxTokens,
-    }),
-  });
+  let response;
+  
+  if (model.provider === 'groq') {
+    response = await fetch(model.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${model.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: model.name,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,
+        max_tokens: model.maxTokens,
+      }),
+    });
+  } else if (model.provider === 'gemini') {
+    // Gemini API format
+    const url = `${model.url}?key=${model.apiKey}`;
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }],
+        }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: model.maxTokens,
+        },
+      }),
+    });
+  } else {
+    throw new Error(`Unknown provider: ${model.provider}`);
+  }
 
-  if (res.status === 429) {
+  if (response.status === 429) {
     throw new Error(`RATE_LIMITED:${model.name}`);
   }
 
-  if (res.status === 503) {
+  if (response.status === 503) {
     throw new Error(`UNAVAILABLE:${model.name}`);
   }
 
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`API error ${res.status} on ${model.name}: ${errBody}`);
+  if (!response.ok) {
+    const errBody = await response.text();
+    throw new Error(`API error ${response.status} on ${model.name}: ${errBody}`);
   }
 
-  const data = await res.json() as any;
-  return data.choices[0].message.content;
+  const data = await response.json() as any;
+  
+  // Handle different response formats
+  let content: string;
+  if (model.provider === 'groq') {
+    content = data.choices[0].message.content;
+  } else if (model.provider === 'gemini') {
+    content = data.candidates[0].content.parts[0].text;
+  } else {
+    throw new Error(`Unknown provider: ${model.provider}`);
+  }
+  
+  return content;
 }
 
 async function callWithLoadBalancing(prompt: string): Promise<string> {
