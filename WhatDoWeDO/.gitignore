@@ -11,3 +11,5 @@ ios/
 *.orig.*
 web-build/
 .env
+app.json
+
