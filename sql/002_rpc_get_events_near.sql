@@ -4,7 +4,8 @@ CREATE OR REPLACE FUNCTION get_events_near(
   user_lat DOUBLE PRECISION,
   user_lng DOUBLE PRECISION,
   radius_km DOUBLE PRECISION DEFAULT 10,
-  category_filter TEXT DEFAULT NULL
+  category_filter TEXT DEFAULT NULL,
+  date_filter DATE DEFAULT NULL
 )
 RETURNS TABLE (
   id UUID,
@@ -53,5 +54,6 @@ AS $$
     )
     AND e.start_time >= NOW()
     AND (category_filter IS NULL OR e.category = category_filter)
+    AND (date_filter IS NULL OR e.start_time::date = date_filter)
   ORDER BY e.start_time ASC;
 $$;

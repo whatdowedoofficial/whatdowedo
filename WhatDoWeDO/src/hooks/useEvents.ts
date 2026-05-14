@@ -13,7 +13,8 @@ interface UseEventsReturn {
 export function useEvents(
   location: Coordinates,
   radiusKm: number = DEFAULT_RADIUS_KM,
-  category: string | null = null
+  category: string | null = null,
+  dateFilter: string | null = null
 ): UseEventsReturn {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,6 +31,7 @@ export function useEvents(
         longitude: location.longitude,
         radiusKm,
         category,
+        dateFilter,
       });
       setEvents(data);
     } catch (err: any) {
@@ -54,7 +56,7 @@ export function useEvents(
         clearTimeout(debounceRef.current);
       }
     };
-  }, [location.latitude, location.longitude, radiusKm, category]);
+  }, [location.latitude, location.longitude, radiusKm, category, dateFilter]);
 
   return { events, loading, error, refetch: fetchEvents };
 }

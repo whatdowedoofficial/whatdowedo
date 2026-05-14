@@ -6,16 +6,18 @@ interface GetEventsParams {
   longitude: number;
   radiusKm: number;
   category?: string | null;
+  dateFilter?: string | null;
 }
 
 export async function getEventsNear(params: GetEventsParams): Promise<EventItem[]> {
-  const { latitude, longitude, radiusKm, category } = params;
+  const { latitude, longitude, radiusKm, category, dateFilter } = params;
 
   const { data, error } = await supabase.rpc('get_events_near', {
     user_lat: latitude,
     user_lng: longitude,
     radius_km: radiusKm,
     category_filter: category ?? null,
+    date_filter: dateFilter ?? null,
   });
 
   if (error) {

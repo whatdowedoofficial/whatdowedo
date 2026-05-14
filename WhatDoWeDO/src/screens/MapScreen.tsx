@@ -6,6 +6,7 @@ import { useLocation } from '../hooks/useLocation';
 import { useEvents } from '../hooks/useEvents';
 import { SearchBar } from '../components/SearchBar';
 import { RadiusSelector } from '../components/RadiusSelector';
+import { DateFilter } from '../components/DateFilter';
 import { EventCard } from '../components/EventCard';
 import { COLORS, CATEGORY_COLORS, DEFAULT_RADIUS_KM } from '../constants';
 import type { EventItem } from '../types/event';
@@ -13,8 +14,9 @@ import type { EventItem } from '../types/event';
 export function MapScreen() {
   const { location, loading: locationLoading, requestGPS, searchLocation } = useLocation();
   const [radiusKm, setRadiusKm] = useState(DEFAULT_RADIUS_KM);
+  const [dateFilter, setDateFilter] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
-  const { events, loading: eventsLoading } = useEvents(location, radiusKm);
+  const { events, loading: eventsLoading } = useEvents(location, radiusKm, null, dateFilter);
   const mapRef = useRef<MapView>(null);
 
   // Animate map when location changes
@@ -61,6 +63,9 @@ export function MapScreen() {
 
       {/* Radius selector */}
       <RadiusSelector value={radiusKm} onChange={handleRadiusChange} />
+
+      {/* Date filter */}
+      <DateFilter value={dateFilter} onChange={setDateFilter} />
 
       {/* Map */}
       <View style={styles.mapContainer}>
