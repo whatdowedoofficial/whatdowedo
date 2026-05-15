@@ -35,6 +35,7 @@
       "googleMapsApiKey": "AIzaSyBmoVeB4NdwBLWa8rgHd9IsPy0E5mI5Jno"
     },
     "plugins": [
+      "./plugins/withGoogleMapsApiKey.js",
       [
         "expo-location",
         {
