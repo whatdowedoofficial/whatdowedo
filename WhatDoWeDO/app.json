@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FF5A5F"
       },
-      "package": "com.whatdowedo.app",
+      "package": "com.anonymous.whatdowedo",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -39,6 +39,14 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "WhatDoWeDO ha bisogno della tua posizione per mostrarti gli eventi vicino a te."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraMavenRepositories": []
+          }
         }
       ],
       "expo-asset",
