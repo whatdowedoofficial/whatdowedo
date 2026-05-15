@@ -2,7 +2,7 @@ const { withAndroidManifest } = require('@expo/config-plugins');
 
 module.exports = function withGoogleMapsApiKey(config) {
   return withAndroidManifest(config, async (config) => {
-    const apiKey = config.android?.googleMapsApiKey;
+    const apiKey = config.android?.googleMapsApiKey || process.env.GOOGLE_MAPS_API_KEY;
     
     if (!apiKey) {
       console.warn('No googleMapsApiKey found in app.json');
