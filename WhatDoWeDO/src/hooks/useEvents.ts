@@ -43,13 +43,17 @@ export function useEvents(
 
   // Debounced fetch when params change
   useEffect(() => {
+    // Reset immediately so count badge never shows stale data while map has moved
+    setEvents([]);
+    setLoading(true);
+
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     debounceRef.current = setTimeout(() => {
       fetchEvents();
-    }, 500);
+    }, 300);
 
     return () => {
       if (debounceRef.current) {
